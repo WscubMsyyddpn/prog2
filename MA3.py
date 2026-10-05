@@ -98,10 +98,10 @@ def _woker_function(n,d):
         squared_sums = map(lambda pt: sum(x**2 for x in pt), points)
         inside_points = list(filter(lambda sq_dist: sq_dist <= 1.0, squared_sums))
         
-        # Approximated hypersphere volume
+        # return number of inside points
         return (len(inside_points))
 
-def sphere_volume_parallel(n, d, num_workers=4):
+def sphere_volume_parallel(n, d, num_workers):
     # Divide n into chunks to distribute across CPU cores
     chunk_size = n // num_workers
     remainder = n % num_workers
@@ -118,40 +118,46 @@ def sphere_volume_parallel(n, d, num_workers=4):
     
 def main():
     # Exc1
-    # dots = [1000, 10000, 100000]
-    # for n in dots:
-    #     approximate_pi(n)
+    dots = [1000, 10000, 100000]
+    for n in dots:
+        approximate_pi(n)
 
-    # # Exc2
-    # n = 100000
-    # d = 2
-    # sphere_volume(n, d)
-    # print(f"Actual volume of {d} dimentional sphere = {hypersphere_exact(n,d)}")
+    # Exc2
+    n = 100000
+    d = 2
+    sphere_volume(n, d)
+    print(f"Actual volume of {d} dimentional sphere = {hypersphere_exact(n,d)}")
 
-    # n = 100000
-    # d = 11
-    # sphere_volume(n, d)
-    # print(f"Actual volume of {d} dimentional sphere = {hypersphere_exact(n,d)}")
+    n = 100000
+    d = 11
+    sphere_volume(n, d)
+    print(f"Actual volume of {d} dimentional sphere = {hypersphere_exact(n,d)}")
 
-    # # Exc3
-    # n = 1000000
-    # d = 11
-    # start = pc()
-    # sphere_volume(n, d)
-    # stop = pc()
-    # print(f"Exc3: Sequential time of {d} and {n}: {stop-start}")
-    # print("What is numba time?")
+    # Exc3
+    n = 1000000
+    d = 11
+    start = pc()
+    sphere_volume(n, d)
+    stop = pc()
+    print(f"Exc3: Sequential time of {d} and {n}: {stop-start}")
+
+    print("What is numba time?")
+    start = pc()
+    sphere_volume_numba(n, d)
+    stop = pc()
+    print(f"Exc3: Sequential time of {d} and {n}: {stop-start}")
 
     # Exc4
     n = 1000000
     d = 11
     start = pc()
-    print(sphere_volume(n, d))
+    sphere_volume(n, d)
     stop = pc()
     print(f"Exc4: Sequential time of {d} and {n}: {stop-start}")
+    
     print("What is parallel time?")
     start = pc()
-    print(sphere_volume_parallel(n,d,4))
+    sphere_volume_parallel(n,d,6)
     stop = pc()
     print(f"Exc4: Sequential time of {d} and {n}: {stop-start}")
 
