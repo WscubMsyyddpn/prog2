@@ -9,7 +9,6 @@ Date reviewed:
 import random
 import matplotlib.pyplot as plt
 import math as m
-import os
 import concurrent.futures as future
 from statistics import mean 
 from time import perf_counter as pc
@@ -55,20 +54,24 @@ def approximate_pi(n):
 
 # Exc2, approximation
 def sphere_volume(n, d): 
-    # generate n d-dimensional points in [-1, 1]^d
+    # create random points inside a hyper cube
     points = [[random.uniform(-1.0, 1.0) for _ in range(d)] for _ in range(n)]
+
+    # lambdafunction squares
+    square_func = lambda pt: sum(x**2 for x in pt)
+    # applies the function to the interable points
+    square = map(square_func, points)
+
+    # criteria: squared distance is less then 1.0 which means inside unit sphere
+    filter_func = lambda sq_dist: sq_dist <= 1.0
+    # applies the filter on square based on criteria from filter_func
+    points_inside = list(filter(filter_func, square))
     
-    # map to compute sum of squared coordinates: sum(x_i^2)
-    squared_sums = map(lambda pt: sum(x**2 for x in pt), points)
+    # volume of hypercube
+    volume_hc = 2.0 ** d
     
-    # Concept 3: Higher-order function `filter` to find points satisfying sum(x_i^2) <= 1.0
-    inside_points = list(filter(lambda sq_dist: sq_dist <= 1.0, squared_sums))
-    
-    # Volume of bounding hypercube [-1, 1]^d is 2^d
-    hypercube_volume = 2.0 ** d
-    
-    # Approximated hypersphere volume
-    return (len(inside_points) / n) * hypercube_volume
+    # approximated hypersphere volume
+    return (len(points_inside) / n) * volume_hc
 
 
 #Exc2, real value
@@ -88,29 +91,32 @@ def sphere_volume_numba(n:int, d:int)->float:
             sum_square += coord * coord
         if sum_square <= 1:
             n_c += 1
-    return (2.0**d) *(n_c/n)
+    return (n_c/n) * (2.0**d)
 
 #Exc4: parallel code - parallelize actual computations by splitting data
 
-def _woker_function(n,d):
-    # generate n d-dimensional points in [-1, 1]^d
-        points = [[random.uniform(-1.0, 1.0) for _ in range(d)] for _ in range(n)]
-        squared_sums = map(lambda pt: sum(x**2 for x in pt), points)
-        inside_points = list(filter(lambda sq_dist: sq_dist <= 1.0, squared_sums))
+def _worker_function(n,d):
+    points = [[random.uniform(-1.0, 1.0) for _ in range(d)] for _ in range(n)]
+    square_func = lambda pt: sum(x**2 for x in pt)
+    square = map(square_func, points)
+    filter_func = lambda sq_dist: sq_dist <= 1.0
+    points_inside = list(filter(filter_func, square))
         
-        # return number of inside points
-        return (len(inside_points))
+    # return number of inside points
+    return (len(points_inside))
 
 def sphere_volume_parallel(n, d, num_workers):
-    # Divide n into chunks to distribute across CPU cores
+    # divide into equal worker chunks
     chunk_size = n // num_workers
+    # remainder chunk
     remainder = n % num_workers
+    # distrubution of chunks and remainder (gives all workers a chunk or chunk + remainder)
     chunks = [chunk_size + 1 if i < remainder else chunk_size for i in range(num_workers)]
+
     
-    # ProcessPoolExecutor run in a context manager as shown in the text
     with future.ProcessPoolExecutor() as ex:
-        # Map the worker task across the chunks, passing d as well
-        results = ex.map(_woker_function, chunks, [d] * num_workers)
+        # map worker task across the chunks, and dimension d. 
+        results = ex.map(_worker_function, chunks, [d] * num_workers)
         total_inside = sum(results)
 
     hypercube_volume = 2.0 ** d
@@ -147,7 +153,7 @@ def main():
     start = pc()
     sphere_volume_numba(n, d)
     stop = pc()
-    print(f"Exc3: Sequential time of {d} and {n}: {stop-start}")
+    print(f"Exc3: Numba time of {d} and {n}: {stop-start}")
 
     # Exc4
     n = 1000000
@@ -161,8 +167,46 @@ def main():
     start = pc()
     sphere_volume_parallel(n,d,6)
     stop = pc()
-    print(f"Exc4: Sequential time of {d} and {n}: {stop-start}")
+    print(f"Exc4: Parallel time of {d} and {n}: {stop-start}")
 
 
 if __name__ == '__main__':
 	main()
+
+
+
+'''
+VSCODE
+Approximation: 3.224000
+Approximation: 3.139600
+Approximation: 3.129640
+Actual volume of 2 dimentional sphere = 3.141592653589793
+Approximation volume of 2 dimentional sphere = 3.13952
+Actual volume of 11 dimentional sphere = 1.8841038793898994
+Approximation volume of 11 dimentional sphere = 2.08896
+Exc3: Sequential time of 11 and 1000000: 5.507090199971572
+What is numba time?
+Exc3: Sequential time of 11 and 1000000: 1.6331422999501228
+Exc4: Sequential time of 11 and 1000000: 5.62280029989779
+What is parallel time?
+Exc4: Sequential time of 11 and 1000000: 3.4570555000100285
+
+LINUX
+Approximation: 3.088000
+Approximation: 3.152400
+Approximation: 3.141680
+Actual volume of 2 dimentional sphere = 3.141592653589793
+Approximation volume of 2 dimentional sphere = 3.13428
+Actual volume of 11 dimentional sphere = 1.8841038793898994
+Approximation volume of 11 dimentional sphere = 1.96608
+Exc3: Sequential time of 11 and 1000000: 13.917332861048635
+What is numba time?
+Exc3: Sequential time of 11 and 1000000: 1.8035552239743993
+Exc4: Sequential time of 11 and 1000000: 13.836500756966416
+What is parallel time?
+Exc4: Sequential time of 11 and 1000000: 2.86912150104763
+
+
+
+
+'''
