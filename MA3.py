@@ -46,8 +46,8 @@ def approximate_pi(n):
     ax.set_title(f"Monte Carlo pi (n = {n:,}) ≈ {pi_approx:.5f}")
     ax.set_xlabel("x")
     ax.set_ylabel("y")
-    ax.legend(loc="upper right", markerscale=max(1, int(15 / point_size)))
-
+    filename = f"montecarlo_pi_n_{n}.png"
+    plt.savefig(filename)
     plt.show()
 
     return pi_approx
@@ -144,16 +144,25 @@ def main():
     # Exc3
     n = 1000000
     d = 11
-    start = pc()
-    sphere_volume(n, d)
-    stop = pc()
-    print(f"Exc3: Sequential time of {d} and {n}: {stop-start}")
 
-    print("What is numba time?")
-    start = pc()
-    sphere_volume_numba(n, d)
-    stop = pc()
-    print(f"Exc3: Numba time of {d} and {n}: {stop-start}")
+    py_times = []
+    for i in range(1, 4):
+        start = pc()
+        sphere_volume(n, d)
+        end = pc()
+        elapsed = end - start
+        py_times.append(elapsed)
+        print(f"Regular python - Call {i}: {elapsed:.4f} seconds")
+        
+    numba_times = []
+    for i in range(1, 4):
+        start = pc()
+        sphere_volume_numba(n, d)
+        end = pc()
+        elapsed = end - start
+        numba_times.append(elapsed)
+        print(f"Numba JIT   - Call {i}: {elapsed:.4f} seconds")
+
 
     # Exc4
     n = 1000000
