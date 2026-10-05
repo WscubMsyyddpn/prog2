@@ -85,7 +85,7 @@ def sphere_volume_numba(n:int, d:int)->float:
         sum_square = 0.0
         for _ in range(d):
             coord = random.uniform(-1.0,1.0)
-            sum_square = coord * coord
+            sum_square += coord * coord
         if sum_square <= 1:
             n_c += 1
     return (2.0**d) *(n_c/n)
@@ -125,13 +125,15 @@ def main():
     # Exc2
     n = 100000
     d = 2
-    sphere_volume(n, d)
+    
     print(f"Actual volume of {d} dimentional sphere = {hypersphere_exact(n,d)}")
+    print(f"Approximation volume of {d} dimentional sphere = {sphere_volume(n, d)}")
 
     n = 100000
     d = 11
     sphere_volume(n, d)
     print(f"Actual volume of {d} dimentional sphere = {hypersphere_exact(n,d)}")
+    print(f"Approximation volume of {d} dimentional sphere = {sphere_volume(n, d)}")
 
     # Exc3
     n = 1000000
